@@ -7,15 +7,15 @@ import androidx.room.RoomDatabase
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.data.entity.RecordedThrowable
 
-@Database(entities = [RecordedThrowable::class, HttpTransaction::class], version = 2, exportSchema = false)
+@Database(entities = [RecordedThrowable::class, HttpTransaction::class], version = 3, exportSchema = false)
 internal abstract class ChuckerDatabase : RoomDatabase() {
 
     abstract fun throwableDao(): RecordedThrowableDao
     abstract fun transactionDao(): HttpTransactionDao
 
     companion object {
-        private val OLD_DB_NAME = "chuck.db"
-        private val DB_NAME = "chucker.db"
+        private const val OLD_DB_NAME = "chuck.db"
+        private const val DB_NAME = "chucker.db"
 
         fun create(context: Context): ChuckerDatabase {
             // We eventually delete the old DB if a previous version of Chuck/Chucker was used.

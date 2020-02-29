@@ -4,16 +4,17 @@ package com.chuckerteam.chucker.internal.data.entity
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.chuckerteam.chucker.internal.support.FormatUtils
+import com.chuckerteam.chucker.internal.support.FormattedUrl
 import com.chuckerteam.chucker.internal.support.JsonConverter
 import com.google.gson.reflect.TypeToken
-import java.util.ArrayList
+import java.util.Date
 import okhttp3.Headers
+import okhttp3.HttpUrl
 
 /**
  * Represent a full HTTP transaction (with Request and Response). Instances of this classes
@@ -21,7 +22,8 @@ import okhttp3.Headers
  */
 @Entity(tableName = "transactions")
 internal class HttpTransaction(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") var id: Long = 0,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id")
+    var id: Long = 0,
     @ColumnInfo(name = "requestDate") var requestDate: Long?,
     @ColumnInfo(name = "responseDate") var responseDate: Long?,
     @ColumnInfo(name = "tookMs") var tookMs: Long?,
@@ -31,6 +33,8 @@ internal class HttpTransaction(
     @ColumnInfo(name = "host") var host: String?,
     @ColumnInfo(name = "path") var path: String?,
     @ColumnInfo(name = "scheme") var scheme: String?,
+    @ColumnInfo(name = "responseTlsVersion") var responseTlsVersion: String?,
+    @ColumnInfo(name = "responseCipherSuite") var responseCipherSuite: String?,
     @ColumnInfo(name = "requestContentLength") var requestContentLength: Long?,
     @ColumnInfo(name = "requestContentType") var requestContentType: String?,
     @ColumnInfo(name = "requestHeaders") var requestHeaders: String?,
@@ -45,7 +49,6 @@ internal class HttpTransaction(
     @ColumnInfo(name = "responseBody") var responseBody: String?,
     @ColumnInfo(name = "isResponseBodyPlainText") var isResponseBodyPlainText: Boolean = true,
     @ColumnInfo(name = "responseImageData") var responseImageData: ByteArray?
-
 ) {
 
     @Ignore
@@ -59,6 +62,8 @@ internal class HttpTransaction(
         host = null,
         path = null,
         scheme = null,
+        responseTlsVersion = null,
+        responseCipherSuite = null,
         requestContentLength = null,
         requestContentType = null,
         requestHeaders = null,
@@ -87,10 +92,10 @@ internal class HttpTransaction(
         }
 
     val requestDateString: String?
-        get() = requestDate?.toString()
+        get() = requestDate?.let { Date(it).toString() }
 
     val responseDateString: String?
-        get() = responseDate?.toString()
+        get() = responseDate?.let { Date(it).toString() }
 
     val durationString: String?
         get() = tookMs?.let { "$it ms" }
@@ -113,7 +118,7 @@ internal class HttpTransaction(
             return when (status) {
                 Status.Failed -> error
                 Status.Requested -> null
-                else -> responseCode.toString() + " " + responseMessage
+                else -> "$responseCode $responseMessage"
             }
         }
 
@@ -122,12 +127,12 @@ internal class HttpTransaction(
             return when (status) {
                 Status.Failed -> " ! ! !  $method $path"
                 Status.Requested -> " . . .  $method $path"
-                else -> responseCode.toString() + " " + method + " " + path
+                else -> "$responseCode $method $path"
             }
         }
 
     val isSsl: Boolean
-        get() = scheme?.toLowerCase() == "https"
+        get() = scheme.equals("https", ignoreCase = true)
 
     val responseImageBitmap: Bitmap?
         get() {
@@ -186,9 +191,9 @@ internal class HttpTransaction(
 
     private fun formatBody(body: String, contentType: String?): String {
         return when {
-            contentType != null && contentType.toLowerCase().contains("json") ->
+            contentType != null && contentType.contains("json", ignoreCase = true) ->
                 FormatUtils.formatJson(body)
-            contentType != null && contentType.toLowerCase().contains("xml") ->
+            contentType != null && contentType.contains("xml", ignoreCase = true) ->
                 FormatUtils.formatXml(body)
             else -> body
         }
@@ -206,12 +211,57 @@ internal class HttpTransaction(
         return responseBody?.let { formatBody(it, responseContentType) } ?: ""
     }
 
-    fun populateUrl(url: String): HttpTransaction {
-        this.url = url
-        val uri = Uri.parse(url)
-        host = uri.host
-        path = ("${uri.path}${uri.query?.let { "?$it" } ?: ""}")
-        scheme = uri.scheme
+    fun populateUrl(httpUrl: HttpUrl): HttpTransaction {
+        val formattedUrl = FormattedUrl.fromHttpUrl(httpUrl, encoded = false)
+        url = formattedUrl.url
+        host = formattedUrl.host
+        path = formattedUrl.pathWithQuery
+        scheme = formattedUrl.scheme
         return this
+    }
+
+    fun getFormattedUrl(encode: Boolean): String {
+        val httpUrl = url?.let(HttpUrl::get) ?: return ""
+        return FormattedUrl.fromHttpUrl(httpUrl, encode).url
+    }
+
+    fun getFormattedPath(encode: Boolean): String {
+        val httpUrl = url?.let(HttpUrl::get) ?: return ""
+        return FormattedUrl.fromHttpUrl(httpUrl, encode).pathWithQuery
+    }
+
+    // Not relying on 'equals' because comparison be long due to request and response sizes
+    // and it would be unwise to do this every time 'equals' is called.
+    @Suppress("ComplexMethod")
+    fun hasTheSameContent(other: HttpTransaction?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
+
+        return (id == other.id) &&
+            (requestDate == other.requestDate) &&
+            (responseDate == other.responseDate) &&
+            (tookMs == other.tookMs) &&
+            (protocol == other.protocol) &&
+            (method == other.method) &&
+            (url == other.url) &&
+            (host == other.host) &&
+            (path == other.path) &&
+            (scheme == other.scheme) &&
+            (responseTlsVersion == other.responseTlsVersion) &&
+            (responseCipherSuite == other.responseCipherSuite) &&
+            (requestContentLength == other.requestContentLength) &&
+            (requestContentType == other.requestContentType) &&
+            (requestHeaders == other.requestHeaders) &&
+            (requestBody == other.requestBody) &&
+            (isRequestBodyPlainText == other.isRequestBodyPlainText) &&
+            (responseCode == other.responseCode) &&
+            (responseMessage == other.responseMessage) &&
+            (error == other.error) &&
+            (responseContentLength == other.responseContentLength) &&
+            (responseContentType == other.responseContentType) &&
+            (responseHeaders == other.responseHeaders) &&
+            (responseBody == other.responseBody) &&
+            (isResponseBodyPlainText == other.isResponseBodyPlainText) &&
+            (responseImageData?.contentEquals(other.responseImageData ?: byteArrayOf()) != false)
     }
 }

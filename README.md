@@ -1,6 +1,5 @@
 # Chucker
-
-[![JitPack](https://jitpack.io/v/ChuckerTeam/Chucker.svg)](https://jitpack.io/#ChuckerTeam/Chucker) [![Build Status](https://travis-ci.org/ChuckerTeam/chucker.svg?branch=master)](https://travis-ci.org/ChuckerTeam/chucker) [![Android Weekly](https://img.shields.io/badge/Android%20Weekly-%23375-blue.svg)](https://androidweekly.net/issues/issue-375) ![License](https://img.shields.io/github/license/ChuckerTeam/Chucker.svg) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
+[![JitPack](https://jitpack.io/v/ChuckerTeam/Chucker.svg)](https://jitpack.io/#ChuckerTeam/Chucker) [![Build Status](https://travis-ci.org/ChuckerTeam/chucker.svg?branch=master)](https://travis-ci.org/ChuckerTeam/chucker)  ![License](https://img.shields.io/github/license/ChuckerTeam/Chucker.svg) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com) [![Join the chat at https://kotlinlang.slack.com](https://img.shields.io/badge/slack-@kotlinlang/chucker-yellow.svg?logo=slack)](https://kotlinlang.slack.com/archives/CRWD6370R) [![Android Weekly](https://img.shields.io/badge/Android%20Weekly-%23375-blue.svg)](https://androidweekly.net/issues/issue-375)
 
 _A fork of [Chuck](https://github.com/jgilfelt/chuck)_
 
@@ -21,7 +20,7 @@ _A fork of [Chuck](https://github.com/jgilfelt/chuck)_
 * [Acknowledgments](#acknowledgments-)
 * [License](#license-)
 
-Chucker simplifies the inspection of **HTTP(S) requests/responses**, and **Throwables** fired by your Android App. Chucker works as a **OkHttp Interceptor** persisting all those events inside your application, and providing a UI for inspecting and sharing their content.
+Chucker simplifies the inspection of **HTTP(S) requests/responses**, and **Throwables** fired by your Android App. Chucker works as an **OkHttp Interceptor** persisting all those events inside your application, and providing a UI for inspecting and sharing their content.
 
 Apps using Chucker will display a **push notification** showing a summary of ongoing HTTP activity and Throwables. Tapping on the notification launches the full Chucker UI. Apps can optionally suppress the notification, and launch the Chucker UI directly from within their own interface.
 
@@ -43,8 +42,8 @@ repositories {
 
 ```groovy
 dependencies {
-  debugImplementation "com.github.ChuckerTeam.Chucker:library:3.0.1"
-  releaseImplementation "com.github.ChuckerTeam.Chucker:library-no-op:3.0.1"
+  debugImplementation "com.github.ChuckerTeam.Chucker:library:3.1.2"
+  releaseImplementation "com.github.ChuckerTeam.Chucker:library-no-op:3.1.2"
 }
 ```
 
@@ -64,7 +63,7 @@ Don't forget to check the [changelog](CHANGELOG.md) to have a look at all the ch
 
 * Compatible with **OkHTTP 4**
 * **API >= 16** compatible
-* Easy to integrate (just a 2 gradle implementation line).
+* Easy to integrate (just 2 gradle `implementation` lines).
 * Works **out of the box**, no customization needed.
 * **Empty release artifact** 🧼 (no traces of Chucker in your final APK).
 * Support for body text search with **highlighting** 🕵️‍♂️
@@ -95,10 +94,10 @@ val chuckerInterceptor = ChuckerInterceptor(
         context = this,
         // The previously created Collector
         collector = chuckerCollector,
-        // The max body content length, after this responses will be truncated.
+        // The max body content length in bytes, after this responses will be truncated.
         maxContentLength = 250000L,
-        // List of headers to obfuscate in the Chucker UI
-        headersToRedact = listOf("Auth-Token"))
+        // List of headers to replace with ** in the Chucker UI
+        headersToRedact = setOf("Auth-Token"))
 
 // Don't forget to plug the ChuckerInterceptor inside the OkHttpClient
 val client = OkHttpClient.Builder()
@@ -108,7 +107,7 @@ val client = OkHttpClient.Builder()
 
 ### Throwables ☄️
 
-Chucker supports also collecting and displaying **Throwables** of your application. To inform Chucker that a `Throwable` was fired you need to call the `onError` method of the `ChuckerCollector` (you need to retain an instance of your collector):
+Chucker can also collect and display **Throwables** of your application. To inform Chucker that a `Throwable` was fired you need to call the `onError` method of the `ChuckerCollector` (you need to retain an instance of your collector):
 
 ```kotlin
 try {
@@ -127,8 +126,7 @@ It is intended for **use during development**, and not in release builds or othe
 You can redact headers that contain sensitive information by calling `redactHeader(String)` on the `ChuckerInterceptor`.
 
 ```kotlin
-interceptor.redactHeader("Auth-Token");
-interceptor.redactHeader("User-Session");
+interceptor.redactHeader("Auth-Token", "User-Session");
 ```
 
 ## Migrating 🚗
@@ -165,22 +163,38 @@ If you're looking for the **latest stable version**, you can always find it on t
 * Why are retries and redirects not being captured discretely?
 * Why are my encoded request/response bodies not appearing as plain text?
 
-Please refer to [this section of the OkHttp wiki](https://github.com/square/okhttp/wiki/Interceptors#choosing-between-application-and-network-interceptors). You can choose to use Chucker as either an application or network interceptor, depending on your requirements.
+Please refer to [this section of the OkHttp documentation](https://square.github.io/okhttp/interceptors/). You can choose to use Chucker as either an application or network interceptor, depending on your requirements.
 
 ## Contributing 🤝
 
-**We're looking for contributors! Don't be shy.** 😁 Feel free to open issues/pull requests to help me improve this project.
+We're offering support for Chucker on the [#chucker](https://kotlinlang.slack.com/archives/CRWD6370R) channel on [kotlinlang.slack.com](https://kotlinlang.slack.com/). Come and join the conversation over there.
+
+**We're looking for contributors! Don't be shy.** 😁 Feel free to open issues/pull requests to help us improve this project.
 
 * When reporting a new Issue, make sure to attach **Screenshots**, **Videos** or **GIFs** of the problem you are reporting.
 * When submitting a new PR, make sure tests are all green. Write new tests if necessary.
 
 Short `TODO` List for new contributors:
 
-- [ ] Kotlinize classes inside the `.internal` package.
-- [ ] Have a empty state graphics/message for requests with no headers.
-- [ ] Increment the test coverage.
+- Increment the test coverage.
+- [Issues marked as `Help wanted`](https://github.com/ChuckerTeam/chucker/labels/help%20wanted)
 
 ## Acknowledgments 🌸
+
+### Maintainers
+
+Chucker is currently developed and maintained by the [ChuckerTeam](https://github.com/ChuckerTeam). When submitting a new PR, please ping one of:
+
+- [@olivierperez](https://github.com/olivierperez)
+- [@cortinico](https://github.com/cortinico)
+- [@redwarp](https://github.com/redwarp)
+- [@vbuberen](https://github.com/vbuberen)
+
+### Thanks
+
+Big thanks to our contributors ❤️
+
+### Libraries
 
 Chucker uses the following open source libraries:
 
@@ -191,7 +205,7 @@ Chucker uses the following open source libraries:
 ## License 📄
 
 ```
-    Copyright (C) 2018 Nicola Corti & Olivier Perez.
+    Copyright (C) 2018-2020 Chucker Team.
     Copyright (C) 2017 Jeff Gilfelt.
 
     Licensed under the Apache License, Version 2.0 (the "License");
