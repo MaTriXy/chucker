@@ -1,44 +1,78 @@
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
-def siteUrl = 'https://github.com/ChuckerTeam/chucker' // Homepage URL of the library
-def gitUrl = 'https://github.com/ChuckerTeam/chucker.git' // Git repository URL
-group = GROUP // Maven Group ID for the artifact
+group = GROUP
+version = VERSION_NAME
 
-afterEvaluate { proj ->
-
-    install {
-        repositories.mavenInstaller {
-            // This generates POM.xml with proper parameters
+publishing {
+    repositories {
+        maven {
+            name "snapshot"
+            url = "https://oss.sonatype.org/content/repositories/snapshots"
+            credentials {
+                username = findProperty("NEXUS_USERNAME")
+                password = findProperty("NEXUS_PASSWORD")
+            }
+        }
+        maven {
+            name "staging"
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username = findProperty("NEXUS_USERNAME")
+                password = findProperty("NEXUS_PASSWORD")
+            }
+        }
+    }
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from components.release
+            }
+            artifactId = project.name
             pom {
-                project {
-                    packaging 'aar'
-
-                    // Add your description here
-                    name "${rootProject.group}:${proj.name}"
-                    description = POM_DESCRIPTION
-                    url siteUrl
-
-                    // Set your license
-                    licenses {
-                        license {
-                            name POM_LICENCE_NAME
-                            url POM_SCM_CONNECTION
-                        }
+                name = POM_REPO_NAME
+                description = POM_DESCRIPTION
+                url = POM_URL
+                licenses {
+                    license {
+                        name = POM_LICENSE_NAME
+                        url = POM_LICENSE_URL
                     }
-                    developers {
-                        developer {
-                            id 'olivierperez'
-                            name 'Olivier Perez'
-                            email 'olivier@olivierperez.fr'
-                        }
+                }
+                scm {
+                    connection = POM_SCM_CONNECTION
+                    developerConnection = POM_SCM_CONNECTION
+                    url = POM_URL
+                }
+                developers {
+                    developer {
+                        id = 'cortinico'
+                        name = 'Nicola Corti'
+                        email = 'corti.nico@gmail.com'
                     }
-                    scm {
-                        connection gitUrl
-                        developerConnection gitUrl
-                        url siteUrl
+                    developer {
+                        id = 'vbuberen'
+                        name = 'Volodymyr Buberenko'
+                        email = 'v.buberenko@gmail.com'
+                    }
+                    developer {
+                        id = 'olivierperez'
+                        name = 'Olivier Perez'
+                        email = 'olivier@olivierperez.fr'
                     }
                 }
             }
         }
     }
+}
+
+def signingKey = findProperty("SIGNING_KEY")
+def signingPwd = findProperty("SIGNING_PWD")
+if (signingKey && signingPwd) {
+    signing {
+        useInMemoryPgpKeys(signingKey, signingPwd)
+        sign publishing.publications.release
+    }
+} else {
+    logger.info("Signing Disable as the PGP key was not found")
 }

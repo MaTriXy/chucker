@@ -4,7 +4,7 @@
     <color name="chucker_color_primary_variant">#002f6c</color>
     <color name="chucker_color_background">#ffffff</color>
     <color name="chucker_color_surface">#ffffff</color>
-    <color name="chucker_color_secondary">#00e676</color>
+    <color name="chucker_color_secondary">#009E09</color>
     <color name="chucker_color_error">#F44336</color>
     <color name="chucker_color_on_primary">#ffffff</color>
     <color name="chucker_color_on_secondary">#000000</color>
@@ -21,4 +21,18 @@
 
     <color name="chucker_background_span_color">#ffffff00</color>
     <color name="chucker_foreground_span_color">#ffff0000</color>
+
+    <color name="chucker_chessboard_even_square_light">#F8FAFC</color>
+    <color name="chucker_chessboard_odd_square_light">#D2DADF</color>
+    <color name="chucker_chessboard_even_square_dark">#182531</color>
+    <color name="chucker_chessboard_odd_square_dark">#01101D</color>
+
+    <color name="chucker_json_key_color">#8B0057</color>
+    <color name="chucker_json_value_color">#2F00FF</color>
+    <color name="chucker_json_digit_and_null_value_color">#E84B31</color>
+    <color name="chucker_json_elements_color">#474747</color>
+    <color name="chucker_json_boolean_color">#2F99AA</color>
+
+    <color name="chucker_copy_icon_color">#80474747</color>
+
 </resources>

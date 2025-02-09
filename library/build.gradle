@@ -1,59 +1,66 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'org.jetbrains.dokka'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
+    namespace "com.chuckerteam.chucker"
 
     compileOptions {
-        kotlinOptions.freeCompilerArgs += ['-module-name', "com.github.ChuckerTeam.Chucker.library"]
+        kotlinOptions.freeCompilerArgs += [
+            '-module-name', "com.github.ChuckerTeam.Chucker.library",
+            "-Xexplicit-api=strict"
+        ]
     }
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
-        versionName VERSION_NAME
-        versionCode VERSION_CODE.toInteger()
+        minSdk rootProject.minSdkVersion
         consumerProguardFiles 'proguard-rules.pro'
+        resValue("string", "chucker_version", "$VERSION_NAME")
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
-}
 
-dokka {
-    outputFormat = 'html'
-    outputDirectory = "$buildDir/javadoc"
+    kotlin {
+        jvmToolchain(11)
+    }
 
-    configuration {
-        includeNonPublic = false
-        reportUndocumented = true
-        skipEmptyPackages = true
+    buildFeatures {
+        viewBinding true
+        buildConfig = false
+    }
 
-        perPackageOption {
-            prefix = "com.chuckerteam.chucker.internal"
-            suppress = true
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+        // We don't want to impose RTL on consuming applications.
+        disable 'RtlEnabled'
+        // Don't fail build if some dependencies outdated
+        disable 'GradleDependency'
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            all {
+                useJUnitPlatform()
+            }
         }
     }
-}
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set('sources')
-}
+    resourcePrefix 'chucker_'
 
-def dokka = tasks['dokka']
-
-task javadocJar(type: Jar, dependsOn: dokka) {
-    archiveClassifier.set('javadoc')
-    from dokka.outputDirectory
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -61,21 +68,43 @@ dependencies {
 
     implementation "com.google.android.material:material:$materialComponentsVersion"
     implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVersion"
+    implementation "androidx.palette:palette-ktx:$paletteKtxVersion"
 
+    implementation "androidx.activity:activity-ktx:$activityVersion"
+    implementation "androidx.fragment:fragment-ktx:$fragmentVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
+    implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.room:room-runtime:$roomVersion"
-    kapt "androidx.room:room-compiler:$roomVersion"
+    ksp "androidx.room:room-compiler:$roomVersion"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
 
     implementation "com.google.code.gson:gson:$gsonVersion"
-    implementation "com.squareup.okhttp3:okhttp:$okhttp3Version"
+
+    implementation "org.brotli:dec:$brotliVersion"
+
+    api platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion")
+    api "com.squareup.okhttp3:okhttp"
+    testImplementation "com.squareup.okhttp3:mockwebserver"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+    testImplementation "junit:junit:$junit4Version"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testImplementation "io.mockk:mockk:$mockkVersion"
-    testImplementation "com.squareup.okhttp3:mockwebserver:$okhttp3Version"
-    testImplementation "androidx.arch.core:core-testing:$androidXCore"
+    testImplementation "androidx.test:core:$androidxTestCoreVersion"
+    testImplementation "androidx.arch.core:core-testing:$androidXCoreVersion"
+    testImplementation "com.google.truth:truth:$truthVersion"
+    testImplementation "org.robolectric:robolectric:$robolectricVersion"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion"
+
+    androidTestImplementation "junit:junit:$junit4Version"
+    androidTestImplementation "androidx.test:runner:$androidXTestRunner"
+    androidTestImplementation "androidx.test:rules:$androidXTestRules"
+    androidTestImplementation "com.google.truth:truth:$truthVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidXTestExt"
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

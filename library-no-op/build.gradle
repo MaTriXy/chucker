@@ -2,28 +2,49 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
+    namespace "com.chuckerteam.chucker"
 
     compileOptions {
-        kotlinOptions.freeCompilerArgs += ['-module-name', "com.github.ChuckerTeam.Chucker.library-no-op"]
+        kotlinOptions.freeCompilerArgs += [
+            '-module-name', "com.github.ChuckerTeam.Chucker.library-no-op",
+            "-Xexplicit-api=strict"
+        ]
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlin {
+        jvmToolchain(11)
+    }
+
+    buildFeatures {
+        buildConfig = false
     }
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
+        minSdk rootProject.minSdkVersion
+    }
+
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+        // We don't want to impose RTL on consuming applications.
+        disable 'RtlEnabled'
+        // Don't fail build if some dependencies outdated
+        disable 'GradleDependency'
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 }
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    archiveClassifier.set('sources')
-}
-
-artifacts {
-    archives sourcesJar
-}
-
 dependencies {
-    implementation "com.squareup.okhttp3:okhttp:$okhttp3Version"
+    api "com.squareup.okhttp3:okhttp:$okhttpVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 }
 
