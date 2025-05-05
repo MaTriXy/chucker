@@ -17,6 +17,7 @@ android {
         applicationId "com.chuckerteam.chucker.sample"
         versionName VERSION_NAME
         versionCode VERSION_CODE.toInteger()
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     buildFeatures {
@@ -46,13 +47,6 @@ android {
         }
     }
 
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
-        disable 'AcceptsUserCertificates'
-        // Don't fail build if some dependencies outdated
-        disable 'GradleDependency'
-    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -61,6 +55,11 @@ android {
 
     kotlin {
         jvmToolchain(11)
+    }
+    lint {
+        abortOnError true
+        disable 'AcceptsUserCertificates', 'GradleDependency'
+        warningsAsErrors true
     }
 }
 
@@ -75,6 +74,9 @@ apollo {
 }
 
 dependencies {
+    implementation "androidx.test:runner:$androidXTestRunner"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidXExpresso"
+    androidTestImplementation "androidx.test.ext:junit:$androidXExtJUnit"
     debugImplementation project(':library')
     releaseImplementation project(':library-no-op')
 
